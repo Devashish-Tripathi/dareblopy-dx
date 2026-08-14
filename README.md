@@ -31,6 +31,12 @@ $ cd dareblopy-dx
 $ pip install .
 ```
 
+To check whether the library is installed properly:
+```
+$ pip install pillow pytest
+$ cd dareblopy-dx
+$ python -m pytest test_dareblopy.py
+```
 
 ## Why?
 
