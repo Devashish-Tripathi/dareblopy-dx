@@ -391,7 +391,7 @@ extension.asm_include = ['libs/libjpeg-turbo/simd/nasm/', 'libs/libjpeg-turbo/si
 setup(
     name='dareblopy-dx',
 
-    version='0.1.0',
+    version='0.1.1',
 
     description='dareblopy-dx',
     long_description=long_description,
