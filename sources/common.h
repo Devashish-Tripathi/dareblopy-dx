@@ -101,21 +101,54 @@ private:
 
 // Returns special allocator for reducing data copying, see https://github.com/pybind/pybind11/issues/1236#issuecomment-527730864
 // It also creates a bytes object and stores pointer to newly created object in `bytesObject`
-inline std::function<void*(size_t)> GetBytesAllocator(PyBytesObject*& bytesObject)
+// inline std::function<void*(size_t)> GetBytesAllocator(PyObject*& bytesObject)
+// {
+//     // this lambda will create bytes object of the given size and
+//     // will return pointer to the allocated memory, like malloc would do
+// 	auto alloc = [&bytesObject](size_t size) -> void*
+// 	{
+// 		// here we overallocate by sizeof(uint32_t) to allow sizeof(uint32_t) buffer overruns to enable subtle
+// 		// optimizations.
+// 		// e.g. readying a chunk of data with crc32c checksum in open `read` invocation. This might make a small
+// 		// difference if the disk is network attached.
+// 		// bytesObject = (PyBytesObject*) PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1 + sizeof(uint32_t));
+// 		// PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
+// 		// bytesObject->ob_shash = -1;
+// 		// bytesObject->ob_sval[size] = '\0';
+// 		// return bytesObject->ob_sval;
+		
+// 		// Updates:
+// 		// PyBytes_FromStringAndSize with NULL creates a bytes object
+//         // of length `size` with an uninitialized internal buffer.
+       
+// 		py::gil_scoped_acquire acquire;
+// 		bytesObject = PyBytes_FromStringAndSize(nullptr, size);
+//         if (!bytesObject) {
+// 			return nullptr;
+// 		} 
+//         return static_cast<void*>(PyBytes_AS_STRING(bytesObject));		
+	
+// 	};
+// 	return alloc;
+// }
+
+inline std::function<void*(size_t)> GetBytesAllocator(PyObject*& bytesObject)
 {
-    // this lambda will create bytes object of the given size and
-    // will return pointer to the allocated memory, like malloc would do
-	auto alloc = [&bytesObject](size_t size)
-	{
-		// here we overallocate by sizeof(uint32_t) to allow sizeof(uint32_t) buffer overruns to enable subtle
-		// optimizations.
-		// e.g. readying a chunk of data with crc32c checksum in open `read` invocation. This might make a small
-		// difference if the disk is network attached.
-		bytesObject = (PyBytesObject*) PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1 + sizeof(uint32_t));
-		PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
-		bytesObject->ob_shash = -1;
-		bytesObject->ob_sval[size] = '\0';
-		return bytesObject->ob_sval;
-	};
-	return alloc;
+    auto alloc = [&bytesObject](size_t size) -> void*
+    {
+        // 1. Acquire GIL to allocate the Python object safely
+        py::gil_scoped_acquire acquire;
+
+        bytesObject = PyBytes_FromStringAndSize(nullptr, size + sizeof(uint32_t));
+        if (!bytesObject) {
+            return nullptr;
+        }
+
+        Py_SET_SIZE(bytesObject, size);
+        char* buf = PyBytes_AS_STRING(bytesObject);
+        buf[size] = '\0';
+
+        return static_cast<void*>(buf);
+    };
+    return alloc;
 }

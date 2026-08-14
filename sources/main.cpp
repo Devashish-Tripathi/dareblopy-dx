@@ -52,26 +52,48 @@ static fsal::File openfile(const char* filename, fsal::StdFile& tmp_std)
 	return fsal::File(&tmp_std, fsal::File::borrow{});
 }
 
-
 static py::object read_as_bytes(const fsal::File& fp)
 {
-	size_t retSize = 0;
-	PyBytesObject* bytesObject = nullptr;
-	size_t size = fp.GetSize();
-	bytesObject = (PyBytesObject*) PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1);
-	PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
-	bytesObject->ob_shash = -1;
-	bytesObject->ob_sval[size] = '\0';
+    size_t retSize = 0;
+    size_t size = fp.GetSize();
+    PyObject* bytesObject = PyBytes_FromStringAndSize(nullptr, size);
+    if (!bytesObject) {
+        throw runtime_error("Failed to allocate bytes object of size %zd", size);
+    }
 
-	fp.Read((uint8_t*)bytesObject->ob_sval, size, &retSize);
+    uint8_t* dst = (uint8_t*)PyBytes_AS_STRING(bytesObject);
+    {
+        py::gil_scoped_release release;
+        fp.Read(dst, size, &retSize);
+    }
 
-	if (retSize != size)
-	{
-		throw runtime_error("Error reading file. Expected to read %zd bytes, but read only %zd", size, retSize);
-	}
+    if (retSize != size)
+    {
+        Py_DECREF(bytesObject);
+        throw runtime_error("Error reading file. Expected to read %zd bytes, but read only %zd", size, retSize);
+    }
 
-	return py::reinterpret_steal<py::object>((PyObject*)bytesObject);
+    return py::reinterpret_steal<py::object>(bytesObject);
 }
+// static py::object read_as_bytes(const fsal::File& fp)
+// {
+// 	size_t retSize = 0;
+// 	PyBytesObject* bytesObject = nullptr;
+// 	size_t size = fp.GetSize();
+// 	bytesObject = (PyBytesObject*) PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1);
+// 	PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
+// 	bytesObject->ob_shash = -1;
+// 	bytesObject->ob_sval[size] = '\0';
+
+// 	fp.Read((uint8_t*)bytesObject->ob_sval, size, &retSize);
+
+// 	if (retSize != size)
+// 	{
+// 		throw runtime_error("Error reading file. Expected to read %zd bytes, but read only %zd", size, retSize);
+// 	}
+
+// 	return py::reinterpret_steal<py::object>((PyObject*)bytesObject);
+// }
 
 void fix_shape(const py::object& _shape, size_t size, std::vector<size_t>& shape_)
 {
@@ -257,14 +279,15 @@ PYBIND11_MODULE(_dareblopy, m)
 			.def(py::init<const std::string&, RecordReader::Compression>(), py::arg("filename"), py::arg("compression") = RecordReader::None)
 			.def("read_record", [](RecordReader& self, size_t& offset)->py::object
 			{
-				PyBytesObject* bytesObject = nullptr;
+				PyObject* bytesObject = nullptr;
 				{
 					py::gil_scoped_release release;
 
 					fsal::Status result = self.ReadRecord(offset, GetBytesAllocator(bytesObject));
 					if (!result.ok() || result.is_eof())
 					{
-						PyObject_Free(bytesObject);
+						// PyObject_Free(bytesObject);
+						Py_XDECREF(bytesObject);
 						throw runtime_error("Error reading record at offset %zd", offset);
 					}
 				}
@@ -280,7 +303,7 @@ PYBIND11_MODULE(_dareblopy, m)
 			})
 			.def("__next__", [](RecordReader& self)->py::object
 			{
-				PyBytesObject* bytesObject = nullptr;
+				PyObject* bytesObject = nullptr;
 				auto status = self.GetNext(GetBytesAllocator(bytesObject));
 				if (!status.ok() || status.is_eof())
 				{
@@ -416,18 +439,34 @@ PYBIND11_MODULE(_dareblopy, m)
 			.def("__next__", &ParsedRecordYielderRandomized::GetNext, py::return_value_policy::take_ownership)
 			.def("next_n", &ParsedRecordYielderRandomized::GetNextN, py::return_value_policy::take_ownership);
 
-	m.def("open_as_bytes", [](const char* filename)
-	{
-		py::gil_scoped_release release;
-		fsal::StdFile tmp_std;
-		auto fp = openfile(filename, tmp_std);
-		return read_as_bytes(fp);
-	}, R"(
-	    Opens file as bytes object
+	// m.def("open_as_bytes", [](const char* filename)
+	// {
+	// 	py::gil_scoped_release release;
+	// 	fsal::StdFile tmp_std;
+	// 	auto fp = openfile(filename, tmp_std);
+	// 	return read_as_bytes(fp);
+	// }, R"(
+	//     Opens file as bytes object
 
-	    Args:
-                filename (str): filename
-	)");
+	//     Args:
+    //             filename (str): filename
+	// )");
+m.def("open_as_bytes", [](const char* filename)
+{
+    fsal::StdFile tmp_std;
+    fsal::File fp;
+    {
+        py::gil_scoped_release release;
+        fp = openfile(filename, tmp_std);
+    }
+    return read_as_bytes(fp);
+}, R"(
+    Opens file as bytes object
+
+    Args:
+        filename (str): filename
+)");
+
 
 	m.def("open_as_numpy_ubyte", [](const char* filename, py::object shape)
 	{
@@ -525,14 +564,15 @@ PYBIND11_MODULE(_dareblopy, m)
 		}, "Opens file")
 		.def("open_as_bytes", [](fsal::Archive& self, const std::string& filepath)->py::object
 		{
-			PyBytesObject* bytesObject = nullptr;
+			PyObject* bytesObject = nullptr;
 			{
 				py::gil_scoped_release release;
 
 				void* result = self.OpenFile(filepath, GetBytesAllocator(bytesObject));
 				if (!result)
 				{
-					PyObject_Free(bytesObject);
+					// PyObject_Free(bytesObject);
+					Py_XDECREF(bytesObject);
 					throw runtime_error("Can't open file: %s", filepath.c_str());
 				}
 
@@ -640,12 +680,16 @@ PYBIND11_MODULE(_dareblopy, m)
 				}
 				else
 				{
-					PyBytesObject* bytesObject = (PyBytesObject *)PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1);
-					PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
-					bytesObject->ob_shash = -1;
-					bytesObject->ob_sval[size] = '\0';
-					self.Read((uint8_t*)bytesObject->ob_sval, size);
-					return py::reinterpret_steal<py::object>((PyObject*)bytesObject);
+					// PyBytesObject* bytesObject = (PyBytesObject *)PyObject_Malloc(offsetof(PyBytesObject, ob_sval) + size + 1);
+					// PyObject_INIT_VAR(bytesObject, &PyBytes_Type, size);
+					// bytesObject->ob_shash = -1;
+					// bytesObject->ob_sval[size] = '\0';
+					// self.Read((uint8_t*)bytesObject->ob_sval, size);
+					// return py::reinterpret_steal<py::object>((PyObject*)bytesObject);
+					PyObject* bytesObject = PyBytes_FromStringAndSize(nullptr, size);
+					self.Read((uint8_t*)PyBytes_AS_STRING(bytesObject), size);
+					return py::reinterpret_steal<py::object>(bytesObject);
+
 				}
 			}, py::arg("size") = -1, py::return_value_policy::take_ownership)
 			.def("seek", [](fsal::File& self, ptrdiff_t offset, int origin){

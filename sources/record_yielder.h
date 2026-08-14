@@ -47,7 +47,7 @@ public:
 
 	py::object GetNext()
 	{
-		PyBytesObject* bytesObject = nullptr;
+		PyObject* bytesObject = nullptr;
 
 		if (m_rr == nullptr)
 		{
@@ -84,7 +84,7 @@ public:
 		{
 			while (true)
 			{
-				PyBytesObject* bytesObject = nullptr;
+				PyObject* bytesObject = nullptr;
 
 				if (m_rr == nullptr)
 				{
@@ -173,7 +173,7 @@ public:
 				m_rr = new RecordReader(m_filenames[m_current_file], m_compression);
 			}
 
-			PyBytesObject* bytesObject = nullptr;
+			PyObject* bytesObject = nullptr;
 
 			auto status = m_rr->GetNext(GetBytesAllocator(bytesObject));
 			if (!status.ok() || status.is_eof())

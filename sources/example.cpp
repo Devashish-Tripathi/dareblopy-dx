@@ -205,7 +205,8 @@ bool Records::FeatureDecode(std::size_t out_index, const std::string& key, const
 				throw runtime_error("Key: %s. Number of bytes values != expected. Values size: %zd but output shape: %s.", key.c_str(), values.value_size(), Shape2str(shape).c_str());
 			}
 			py::object* ptr = (py::object*)out_ptr + offset;
-
+			
+			py::gil_scoped_acquire acquire;
 			for (int i = 0; i < num; ++i)
 			{
 				const std::string& s = *values.value().data()[i];
