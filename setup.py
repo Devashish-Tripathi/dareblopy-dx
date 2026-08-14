@@ -315,8 +315,8 @@ extra_compile_args = {
 }
 
 extra_compile_cpp_args = {
-    'darwin': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp'],
-    'posix': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp'],
+    'darwin': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
+    'posix': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
     'win32': [],
 }
 

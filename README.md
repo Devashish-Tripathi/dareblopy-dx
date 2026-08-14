@@ -26,7 +26,7 @@ $ pip install dareblopy-dx
 To build from source:
 
 ```
-$ git clone https://github.com/Devashish-Tripathi/dareblopy-dx.git
+$ git clone --recursive https://github.com/Devashish-Tripathi/dareblopy-dx.git
 $ cd dareblopy-dx
 $ pip install .
 ```
