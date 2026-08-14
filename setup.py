@@ -309,8 +309,8 @@ extra_link = {
 }
 
 extra_compile_args = {
-    'darwin': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations'],
-    'posix': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations'],
+    'darwin': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
+    'posix': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
     'win32': ['/MT', '/fp:fast', '/GL', '/GR-'],
 }
 
@@ -321,8 +321,8 @@ extra_compile_cpp_args = {
 }
 
 extra_compile_c_args = {
-    'darwin': ['-std=c99', '-Ofast', '-flto'],
-    'posix': ['-std=c99', '-Ofast', '-flto'],
+    'darwin': ['-std=c99', '-Ofast', '-flto', '-Wno-error=implicit-function-declaration'],
+    'posix': ['-std=c99', '-Ofast', '-flto', '-Wno-error=implicit-function-declaration'],
     'win32': [],
 }
 
