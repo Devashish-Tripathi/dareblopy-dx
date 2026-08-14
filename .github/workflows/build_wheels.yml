@@ -10,7 +10,7 @@ on:
 
 jobs:
   build_wheels:
-    name: Build Linux Wheels (Including Python 3.14)
+    name: Build Linux Python 3.14 Wheel
     runs-on: ubuntu-latest
 
     steps:
@@ -30,12 +30,10 @@ jobs:
       - name: Build Wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "cp39-manylinux_x86_64 cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64 cp313-manylinux_x86_64 cp314-manylinux_x86_64"
+          CIBW_BUILD: "cp314-manylinux_x86_64"
           CIBW_PRERELEASE_PYTHONS: "True"
           CIBW_BEFORE_ALL_LINUX: "yum install -y nasm || true"
           CIBW_TEST_SKIP: "cp314-*"
-          CIBW_TEST_REQUIRES: "pytest numpy pillow"
-          CIBW_TEST_COMMAND: "python -c \"import os, pytest, sys; os.chdir(r'{project}'); sys.exit(pytest.main(['test_dareblopy.py']))\""
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
