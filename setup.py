@@ -24,6 +24,15 @@ from codecs import open
 import os
 import sys
 
+fsal_common_path = os.path.join(HERE, "libs", "fsal", "sources", "fsal_common.h")
+if os.path.exists(fsal_common_path):
+    with open(fsal_common_path, "r", encoding="utf-8") as f:
+        c = f.read()
+    bad_line = "_MSC_VER >= 1900"
+    if bad_line in c:
+        with open(fsal_common_path, "w", encoding="utf-8") as f:
+            f.write(c.replace(bad_line, "0"))
+
 stdfile_path = os.path.join("libs", "fsal", "sources", "StdFile.cpp")
 if os.path.exists(stdfile_path):
     with open(stdfile_path, "r") as f:
@@ -412,5 +421,5 @@ setup(
 
     ext_modules=[extension],
 
-    install_requires=['numpy', 'pillow']
+    install_requires=['numpy']
 )
