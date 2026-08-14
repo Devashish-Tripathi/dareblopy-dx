@@ -24,6 +24,8 @@ from codecs import open
 import os
 import sys
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
 fsal_common_path = os.path.join(HERE, "libs", "fsal", "sources", "fsal_common.h")
 if os.path.exists(fsal_common_path):
     with open(fsal_common_path, "r", encoding="utf-8") as f:
