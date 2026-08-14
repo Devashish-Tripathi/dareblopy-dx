@@ -18,7 +18,7 @@ This is a fork of the original [DareBloPy](https://github.com/podgorskiy/dareblo
 It targets deep-learning needs, but it is framework agnostic.
 
 ### Installation
-Available as pypi package:
+Available as pypi package (currently only for Linux):
 ```
 $ pip install dareblopy-dx
 ```
