@@ -23,6 +23,27 @@ from distutils.command.build_ext import build_ext
 from codecs import open
 import os
 import sys
+
+stdfile_path = os.path.join("libs", "fsal", "sources", "StdFile.cpp")
+if os.path.exists(stdfile_path):
+    with open(stdfile_path, "r") as f:
+        content = f.read()
+    
+    target_line = "return fs::file_time_type::clock::to_time_t(fs::last_write_time(m_path));"
+    replacement = """#if defined(_MSC_VER)
+    auto tp = fs::last_write_time(m_path);
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+#else
+    return fs::file_time_type::clock::to_time_t(fs::last_write_time(m_path));
+#endif"""
+    
+    if target_line in content:
+        with open(stdfile_path, "w") as f:
+            f.write(content.replace(target_line, replacement))
+
+
+
+
 import platform
 import re
 import glob
@@ -311,13 +332,13 @@ extra_link = {
 extra_compile_args = {
     'darwin': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
     'posix': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
-    'win32': ['/MT', '/fp:fast', '/GL', '/GR-','/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX', '/D_CRT_SECURE_NO_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS'],
+    'win32': ['/MT', '/fp:fast', '/GL', '/GR-','/std:c++17', '/EHsc', '/DNOMINMAX', '/D_CRT_SECURE_NO_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS'],
 }
 
 extra_compile_cpp_args = {
     'darwin': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
     'posix': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
-    'win32': ['/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_CRT_SECURE_NO_WARNINGS'],
+    'win32': ['/std:c++17', '/EHsc', '/DNOMINMAX', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_CRT_SECURE_NO_WARNINGS'],
 }
 
 extra_compile_c_args = {
