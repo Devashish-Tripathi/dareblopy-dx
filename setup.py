@@ -357,37 +357,39 @@ extension.asm = 'nasm'
 extension.asm_include = ['libs/libjpeg-turbo/simd/nasm/', 'libs/libjpeg-turbo/simd/x86_64/' if p64 else 'libs/libjpeg-turbo/simd/i386/']
 
 setup(
-    name='dareblopy',
+    name='dareblopy-dx',
 
-    version='0.0.5',
+    version='0.1.0',
 
-    description='dareblopy',
+    description='dareblopy-dx',
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/podgorskiy/dareblopy',
+    url='https://github.com/Devashish-Tripathi/dareblopy-dx',
 
-    author='Stanislav Pidhorskyi',
-    author_email='stpidhorskyi@mix.wvu.edu',
+    author='Devashish Tripathi',
+    author_email='tripathidevashish.15@gmail.com',
 
     license='Apache 2.0 License',
 
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
     ],
 
-    keywords='dareblopy',
+    keywords='dareblopy-dx',
 
     packages=['dareblopy'],
 
+    python_requires='>=3.9'
+
     ext_modules=[extension],
 
-    install_requires=['numpy']
+    install_requires=['numpy', 'pillow']
 )
