@@ -311,13 +311,13 @@ extra_link = {
 extra_compile_args = {
     'darwin': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
     'posix': ['-fPIC', '-msse2', '-msse3', '-msse4', '-funsafe-math-optimizations', '-D_POSIX_C_SOURCE=200809L'],
-    'win32': ['/MT', '/fp:fast', '/GL', '/GR-','/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX'],
+    'win32': ['/MT', '/fp:fast', '/GL', '/GR-','/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX', '/D_CRT_SECURE_NO_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS'],
 }
 
 extra_compile_cpp_args = {
     'darwin': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
     'posix': ['-std=c++14', '-lstdc++fs', '-Ofast', '-flto', '-fopenmp', '-include', 'cstdint'],
-    'win32': ['/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX'],
+    'win32': ['/std:c++17', '/EHsc', '/D__cpp_lib_filesystem', '/DNOMINMAX', '/D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS', '/D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS', '/D_CRT_SECURE_NO_WARNINGS'],
 }
 
 extra_compile_c_args = {
