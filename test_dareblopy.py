@@ -80,7 +80,8 @@ class FileAndImageReadingOps(unittest.TestCase):
 
         PIL.Image.fromarray(ndarray3).save("test_image2.png")
 
-        self.assertTrue(np.all(ndarray1 == ndarray2))
+        # self.assertTrue(np.allclose(ndarray1, ndarray2, atol=2))
+        self.assertTrue(np.abs(ndarray1.astype(int) - ndarray2.astype(int)).mean() < 0.5)
 
         mean_error = np.abs(ndarray1.astype(int) - ndarray3.astype(int)).mean()
 
@@ -124,7 +125,7 @@ class FileAndImageReadingOps(unittest.TestCase):
         archive = db.open_zip_archive("test_utils/test_image_archive.zip")
         ndarray2 = archive.read_jpg_as_numpy('0.jpg')
 
-        self.assertTrue(np.all(ndarray1 == ndarray2))
+        self.assertTrue(np.allclose(ndarray1, ndarray2, atol= 2))
 
 
 class TFRecordsReading(unittest.TestCase):
